@@ -1,25 +1,32 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { Suspense } from "react";
+import { Canvas } from "react-three-fiber";
+import Plane, { PLANE_OFFSET } from "./components/Plane";
+// import Controls from "./components/Controls";
+import Stars from "./components/Stars";
+import MouseHandler from "./components/MouseHandler";
+import Slides from "./components/Slides";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <Canvas
+        camera={{
+          position: [0, 0, PLANE_OFFSET],
+        }}
+        gl={{
+          alpha: true,
+        }}
+      >
+        {/* <axesHelper args={999} /> */}
+        <Suspense fallback={null}>
+          <Plane />
+        </Suspense>
+        <Stars />
+        {/* <Controls /> */}
+      </Canvas>
+      <Slides />
+      <MouseHandler />
+    </>
   );
 }
 
