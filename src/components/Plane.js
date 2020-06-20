@@ -7,14 +7,12 @@ import { useSpring, animated } from "react-spring/three";
 import useMainStore from "../store/main";
 
 import baseDisplacementImg from "../img/displacement/base";
+import data from "./Slides/data";
 
 export const PLANE_OFFSET = 8;
 
-const mockSrc =
-  "https://images.unsplash.com/photo-1519058497187-7167f17c6daf?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2048&q=100";
-
 const Plane = () => {
-  const { mouseStatus } = useMainStore();
+  const { mouseStatus, activeSlideIndex } = useMainStore();
   const { direction } = useSpring({
     direction: mouseStatus === "mousedown" ? 0 : 1,
     config: {
@@ -31,15 +29,16 @@ const Plane = () => {
     },
   });
 
-  const { displacement } = useSpring({
-    displacement: mouseStatus === "mousedown" ? 1 : 0,
+  const [{ displacement }, setDisplacement] = useSpring(() => ({
+    displacement: 0,
     config: {
       mass: 1,
       tension: 200,
       friction: 40,
     },
-  });
+  }));
 
+  const activeSlideIndexRef = useRef(0);
   const planeRef = useRef();
   const planeRatio = useRef();
   const { camera } = useThree();
@@ -50,20 +49,42 @@ const Plane = () => {
 
   const viewSize = getViewSize(camera.fov, PLANE_OFFSET);
   const planeSize = {
-    width: viewSize * getWindowRatio() * 1.375,
+    width: viewSize * getWindowRatio() * 1.275,
     height: viewSize * 1.125,
   };
+  planeRatio.current = planeSize.width / planeSize.height;
 
   /**
-   * Calculating to maintain the texture's image ratio
+   * Load all textures
    */
 
-  planeRatio.current = planeSize.width / planeSize.height;
-  const texture = useLoader(THREE.TextureLoader, [
-    mockSrc,
-    mockSrc,
+  const textures = useLoader(
+    THREE.TextureLoader,
+    data.map((entry) => entry.image)
+  );
+  const displacementTexture = useLoader(THREE.TextureLoader, [
     baseDisplacementImg,
   ]);
+
+  /**
+   * On active slide index change
+   */
+
+  useEffect(() => {
+    if (activeSlideIndex % 2 === 0) {
+      planeRef.current.material.uniforms.texture.value =
+        textures[activeSlideIndex];
+      setDisplacement({ displacement: 0 });
+    } else {
+      planeRef.current.material.uniforms.texture2.value =
+        textures[activeSlideIndex];
+      setDisplacement({ displacement: 1 });
+    }
+
+    if (activeSlideIndex !== activeSlideIndexRef.current) {
+      activeSlideIndexRef.current = activeSlideIndex;
+    }
+  }, [textures, activeSlideIndex, setDisplacement]); // eslint-disable-line
 
   /**
    * On resize listener
@@ -72,11 +93,11 @@ const Plane = () => {
   const onResize = () => {
     planeRef.current.material.uniforms.textureFactor.value = getTextureFactor(
       planeRatio.current,
-      texture[0]
+      textures[activeSlideIndexRef.current]
     );
     planeRef.current.material.uniforms.textureFactor2.value = getTextureFactor(
       planeRatio.current,
-      texture[1]
+      textures[activeSlideIndexRef.current + 1]
     );
   };
 
@@ -109,16 +130,16 @@ const Plane = () => {
         <animated.shaderMaterial
           attach="material"
           uniforms={stickyShader.uniforms}
-          uniforms-texture-value={texture[0]}
-          uniforms-texture2-value={texture[1]}
-          uniforms-displacement-value={texture[2]}
+          uniforms-texture-value={textures[0]}
+          uniforms-texture2-value={textures[1]}
+          uniforms-displacement-value={displacementTexture[0]}
           uniforms-textureFactor-value={getTextureFactor(
             planeRatio.current,
-            texture[0]
+            textures[activeSlideIndexRef.current]
           )}
           uniforms-textureFactor2-value={getTextureFactor(
             planeRatio.current,
-            texture[1]
+            textures[activeSlideIndexRef.current + 1]
           )}
           uniforms-direction-value={direction}
           uniforms-progress-value={progress}

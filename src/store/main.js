@@ -6,6 +6,9 @@ const [useMainStore] = create((set) => ({
 
   mouseDownPos: { x: 0, y: 0 },
   setMouseDownPos: (pos) => set((state) => ({ mouseDownPos: pos })),
+
+  activeSlideIndex: 0,
+  setActiveSlideIndex: (index) => set((state) => ({ activeSlideIndex: index })),
 }));
 
 export default useMainStore;

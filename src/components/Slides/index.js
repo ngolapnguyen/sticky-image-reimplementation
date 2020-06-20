@@ -1,13 +1,15 @@
-import React, { useMemo, useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import styled from "styled-components";
 import data from "./data";
 import useMainStore from "../../store/main";
 import { useSpring } from "react-spring";
 import { clamp } from "../../utils/calc";
 import { animated } from "react-spring";
+import Header from "../Header";
 
 const SLIDE_WIDTH_RATIO = 0.6;
 const SLIDE_PADDING_RATIO = 0.1;
+const SLIDE_LIST_PADDING_RATIO = 0.1;
 
 const Container = styled.div`
   position: fixed;
@@ -20,10 +22,11 @@ const Container = styled.div`
   align-items: flex-end;
 `;
 
-const SlideContainer = styled.div`
+const SlideContainer = styled(animated.div)`
   z-index: 999;
   overflow: auto;
-  margin-bottom: 10%;
+  padding-top: 2rem;
+  margin-bottom: 2rem;
 
   -ms-overflow-style: none;
   &::-webkit-scrollbar {
@@ -36,12 +39,25 @@ const SlideList = styled.div`
   white-space: nowrap;
   overflow: visible;
 
-  &::before,
-  &::after {
+  &::before {
     content: "";
     display: block;
-    width: ${100 * (0.2 + SLIDE_PADDING_RATIO)}vw;
-    flex: 0 0 ${100 * (0.2 + SLIDE_PADDING_RATIO)}vw;
+    width: ${100 * (SLIDE_LIST_PADDING_RATIO + SLIDE_PADDING_RATIO)}vw;
+    flex: 0 0 ${100 * (SLIDE_LIST_PADDING_RATIO + SLIDE_PADDING_RATIO)}vw;
+  }
+
+  &:after {
+    content: "";
+    display: block;
+    width: ${100 *
+    (1 -
+      (SLIDE_WIDTH_RATIO + SLIDE_PADDING_RATIO) +
+      SLIDE_LIST_PADDING_RATIO)}vw;
+    flex: 0 0
+      ${100 *
+      (1 -
+        (SLIDE_WIDTH_RATIO + SLIDE_PADDING_RATIO) +
+        SLIDE_LIST_PADDING_RATIO)}vw;
   }
 `;
 
@@ -51,25 +67,63 @@ const Slide = styled(animated.div)`
   display: inline-block;
   color: #ffffff;
   padding-right: 10vw;
+  white-space: break-spaces;
+
+  .slide-content {
+    padding: 2rem;
+    position: relative;
+    max-width: 600px;
+  }
 
   .location {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
   }
 
   .name {
+    font-family: "Cinzel", serif;
     font-weight: bold;
-    font-size: 4rem;
-    white-space: break-spaces;
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    line-height: 1;
+  }
+
+  .description {
+    font-size: 0.875rem;
   }
 `;
 
+const SlideBG = styled(animated.div)`
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  z-index: -1;
+  top: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.5);
+`;
+
+const SlideIndex = styled(animated.div)`
+  position: absolute;
+  left: 2rem;
+  bottom: 0;
+  font-size: 5rem;
+  opacity: 0.3;
+`;
+
 const Slides = () => {
-  const { mouseStatus, mouseDownPos } = useMainStore();
+  const {
+    mouseStatus,
+    mouseDownPos,
+    activeSlideIndex,
+    setActiveSlideIndex,
+  } = useMainStore();
   const mouseStatusRef = useRef(mouseStatus);
   const mouseDownPosRef = useRef(mouseDownPos);
+  const activeSlideIndexRef = useRef(activeSlideIndex);
+
   const sliderRef = useRef(null);
   const initialScrollLeft = useRef(0);
-  const activeSlideIndex = useRef(0);
 
   const minScrollLeft = window.innerWidth * SLIDE_PADDING_RATIO;
 
@@ -99,12 +153,16 @@ const Slides = () => {
       setScrollLeft({ scrollLeft: amountToScroll });
 
       const slideWidth = window.innerWidth * SLIDE_WIDTH_RATIO;
-      activeSlideIndex.current = clamp(
+      const currentActiveSlideIndex = clamp(
         Math.floor(amountToScroll / slideWidth) +
-          (amountToScroll % slideWidth > slideWidth * 0.7 ? 1 : 0),
+          (amountToScroll % slideWidth > slideWidth * 0.5 ? 1 : 0),
         0,
         data.length - 1
       );
+
+      if (currentActiveSlideIndex !== activeSlideIndexRef.current) {
+        setActiveSlideIndex(currentActiveSlideIndex);
+      }
     }
   };
 
@@ -112,9 +170,9 @@ const Slides = () => {
     setScrollLeft({
       scrollLeft:
         minScrollLeft +
-        activeSlideIndex.current * (window.innerWidth * SLIDE_WIDTH_RATIO),
+        activeSlideIndexRef.current * (window.innerWidth * SLIDE_WIDTH_RATIO),
     });
-  }, [minScrollLeft, activeSlideIndex, setScrollLeft]);
+  }, [minScrollLeft, activeSlideIndexRef, setScrollLeft]);
 
   useEffect(() => {
     if (mouseStatus === "mousedown") {
@@ -128,6 +186,10 @@ const Slides = () => {
   }, [mouseStatus, mouseDownPos, setScrollLeft, snapToCurrenActiveSlide]);
 
   useEffect(() => {
+    activeSlideIndexRef.current = activeSlideIndex;
+  }, [activeSlideIndex]);
+
+  useEffect(() => {
     window.addEventListener("mousemove", onMouseMove);
 
     return () => {
@@ -135,12 +197,26 @@ const Slides = () => {
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  /**
+   * Render slides
+   */
+
+  const getDescriptionStyle = (index) =>
+    index === activeSlideIndexRef.current
+      ? {
+          opacity: showSlide.interpolate((value) => 1 - value),
+          transform: showSlide.interpolate(
+            (value) => `translateX(-${value * 10}%)`
+          ),
+        }
+      : { opacity: 0 };
+
   const renderData = data.map((entry, index) => (
     <Slide
       key={`slide-${index}`}
       className="slide"
       style={
-        index !== activeSlideIndex.current
+        index !== activeSlideIndexRef.current
           ? {
               opacity: showSlide,
               transform: showSlide.interpolate(
@@ -150,14 +226,46 @@ const Slides = () => {
           : null
       }
     >
-      <div className="location">{entry.location}</div>
-      <div className="name">{entry.name}</div>
+      <div className="slide-content">
+        <div className="location">{entry.location}</div>
+        <div className="name">{entry.name}</div>
+        <animated.div
+          className="description"
+          style={getDescriptionStyle(index)}
+        >
+          {entry.description}
+        </animated.div>
+        <SlideBG style={getDescriptionStyle(index)} />
+        <SlideIndex
+          style={
+            mouseStatusRef.current === "mousedown"
+              ? {
+                  opacity: showSlide.interpolate((value) => value * 0.3),
+                  transform: showSlide.interpolate(
+                    (value) => `translateX(-${value * 10}%)`
+                  ),
+                }
+              : { opacity: 0 }
+          }
+        >
+          {("0" + (index + 1)).slice(-2)}
+        </SlideIndex>
+      </div>
     </Slide>
   ));
 
   return (
     <Container>
-      <SlideContainer ref={sliderRef} className="noselect">
+      <Header />
+      <SlideContainer
+        ref={sliderRef}
+        className="noselect"
+        style={{
+          background: showSlide.interpolate(
+            (value) => `rgba(0, 0, 0, ${value * 0.3})`
+          ),
+        }}
+      >
         <SlideList>{renderData}</SlideList>
       </SlideContainer>
     </Container>

@@ -26,8 +26,8 @@ const DotFollower = styled(Follower)`
   height: ${DOT_SIZE}px;
 `;
 
-const circleConfig = { mass: 5, tension: 600, friction: 50 };
-const dotConfig = { tension: 1200, friction: 40 };
+const circleConfig = { mass: 5, tension: 800, friction: 100 };
+const dotConfig = { tension: 1200, friction: 50 };
 const transform = (x, y) =>
   `translate3d(${x}px, ${y}px, 0) translate3d(-50%,-50%, 0)`;
 
@@ -57,6 +57,7 @@ const MouseHandler = () => {
   };
 
   useEffect(() => {
+    // No handler for touch events yet. Might come back to it later
     window.addEventListener("mousedown", onMouseDown);
     window.addEventListener("mouseup", onMouseUp);
     window.addEventListener("mousemove", onMouseMove);
