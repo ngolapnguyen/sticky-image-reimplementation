@@ -127,6 +127,7 @@ const Slides = () => {
 
   const minScrollLeft = window.innerWidth * SLIDE_PADDING_RATIO;
 
+  // eslint-disable-next-line
   const [_, setScrollLeft] = useSpring(() => ({
     immediate: false,
     scrollLeft: window.innerWidth * 0.1,
