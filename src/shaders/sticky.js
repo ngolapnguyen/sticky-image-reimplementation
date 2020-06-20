@@ -131,7 +131,7 @@ const stickyShader = {
       // Stickiness of the plane. To put it simply,
       // it's the "duration/intensity" the user has to hold down the mouse
       // to "remove" the plane from the screen, then move it back away
-      float stickiness = 0.7;
+      float stickiness = 0.5;
 
       float waveIn = progress * (1. / stickiness);
       float waveOut = (1. - progress) * (1. / (1. - stickiness));
@@ -146,9 +146,9 @@ const stickyShader = {
 
       float offsetProgress = mix(offsetInProgress, offsetOutProgress, direction);
 
-      pos.z += stickEffect * stickProgress * offset - offsetProgress * offset;
+      pos.z += stickEffect * stickProgress * offset * 1.5 - offsetProgress * offset * 1.5;
 
-      pos.z += progress * sin(distance * 8. - time * 2. ) / 4.;
+      pos.z += progress * sin(distance * 32. - time * 2.) / 4.;
 
       gl_Position =   
           projectionMatrix * 

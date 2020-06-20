@@ -49,8 +49,8 @@ const Plane = () => {
 
   const viewSize = getViewSize(camera.fov, PLANE_OFFSET);
   const planeSize = {
-    width: viewSize * getWindowRatio() * 1.275,
-    height: viewSize * 1.125,
+    width: viewSize * getWindowRatio() * 1.075,
+    height: viewSize * 1.075,
   };
   planeRatio.current = planeSize.width / planeSize.height;
 
