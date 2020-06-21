@@ -12,7 +12,7 @@ const SLIDE_WIDTH_RATIO = 0.6;
 const SLIDE_PADDING_RATIO = 0.1;
 const SLIDE_LIST_PADDING_RATIO = 0.1;
 
-const Container = styled.div`
+const Container = styled(animated.div)`
   position: fixed;
   top: 0;
   left: 0;
@@ -23,7 +23,7 @@ const Container = styled.div`
   align-items: flex-end;
 `;
 
-const SlideContainer = styled(animated.div)`
+const SlideContainer = styled.div`
   z-index: 999;
   overflow: auto;
   padding-top: 2rem;
@@ -121,8 +121,8 @@ const SlideBG = styled(animated.div)`
 
 const SlideIndex = styled(animated.div)`
   position: absolute;
-  left: 2rem;
-  bottom: 0;
+  left: 1rem;
+  top: 0;
   font-size: 5rem;
   opacity: 0.3;
 `;
@@ -274,17 +274,15 @@ const Slides = () => {
   ));
 
   return (
-    <Container>
+    <Container
+      style={{
+        background: showSlide.interpolate(
+          (value) => `rgba(0, 0, 0, ${value * 0.3})`
+        ),
+      }}
+    >
       <Header />
-      <SlideContainer
-        ref={sliderRef}
-        className="noselect"
-        style={{
-          background: showSlide.interpolate(
-            (value) => `rgba(0, 0, 0, ${value * 0.3})`
-          ),
-        }}
-      >
+      <SlideContainer ref={sliderRef} className="noselect">
         <SlideList>{renderData}</SlideList>
       </SlideContainer>
     </Container>

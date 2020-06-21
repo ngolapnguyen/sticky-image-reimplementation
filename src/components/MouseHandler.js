@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
 import { useTrail, animated } from "react-spring";
 import useMainStore from "../store/main";
