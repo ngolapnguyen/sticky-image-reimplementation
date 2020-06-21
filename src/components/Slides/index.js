@@ -6,6 +6,7 @@ import { useSpring } from "react-spring";
 import { clamp } from "../../utils/calc";
 import { animated } from "react-spring";
 import Header from "../Header";
+import { listen } from "../MouseHandler";
 
 const SLIDE_WIDTH_RATIO = 0.6;
 const SLIDE_PADDING_RATIO = 0.1;
@@ -86,10 +87,25 @@ const Slide = styled(animated.div)`
     font-size: 3rem;
     margin-bottom: 1rem;
     line-height: 1;
+    word-break: break-word;
   }
 
   .description {
     font-size: 0.875rem;
+  }
+
+  @media only screen and (max-width: 767px) {
+    .location {
+      font-size: 0.875rem;
+    }
+
+    .name {
+      font-size: 1.5rem;
+    }
+
+    .description {
+      font-size: 0.75rem;
+    }
   }
 `;
 
@@ -191,10 +207,12 @@ const Slides = () => {
   }, [activeSlideIndex]);
 
   useEffect(() => {
-    window.addEventListener("mousemove", onMouseMove);
+    listen("mousemove", onMouseMove);
+    listen("touchmove", onMouseMove, true);
 
     return () => {
       window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("touchmove", onMouseMove);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

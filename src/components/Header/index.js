@@ -9,7 +9,7 @@ const Container = styled.div`
   right: 0;
   display: flex;
   justify-content: space-between;
-  padding: 2rem;
+  padding: 2rem 2.5rem;
   color: #ffffff;
   font-size: 0.875rem;
 `;

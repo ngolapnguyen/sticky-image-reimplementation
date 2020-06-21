@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import styled from "styled-components";
 import { useTrail, animated } from "react-spring";
 import useMainStore from "../store/main";
@@ -31,6 +31,22 @@ const dotConfig = { tension: 1200, friction: 50 };
 const transform = (x, y) =>
   `translate3d(${x}px, ${y}px, 0) translate3d(-50%,-50%, 0)`;
 
+export const listen = (event, handler, isTouch = false) => {
+  const touchListener = (e) => {
+    e.preventDefault();
+    handler({
+      clientX: e.targetTouches[0]?.clientX || null,
+      clientY: e.targetTouches[0]?.clientY || null,
+    });
+  };
+
+  if (isTouch) {
+    window.addEventListener(event, touchListener);
+  } else {
+    window.addEventListener(event, handler);
+  }
+};
+
 const MouseHandler = () => {
   const { setMouseStatus, setMouseDownPos } = useMainStore();
   const [circleTrail, setCircleTrail] = useTrail(2, () => ({
@@ -57,15 +73,24 @@ const MouseHandler = () => {
   };
 
   useEffect(() => {
-    // No handler for touch events yet. Might come back to it later
-    window.addEventListener("mousedown", onMouseDown);
-    window.addEventListener("mouseup", onMouseUp);
-    window.addEventListener("mousemove", onMouseMove);
+    listen("mousedown", onMouseDown);
+    listen("mouseup", onMouseUp);
+    listen("mousemove", onMouseMove);
+
+    listen("touchstart", onMouseDown, true);
+    listen("touchend", onMouseUp, true);
+    listen("touchcancel", onMouseUp, true);
+    listen("touchmove", onMouseMove, true);
 
     return () => {
       window.removeEventListener("mousedown", onMouseDown);
       window.removeEventListener("mouseup", onMouseUp);
       window.removeEventListener("mousemove", onMouseMove);
+
+      window.removeEventListener("touchstart", onMouseDown);
+      window.removeEventListener("touchend", onMouseUp);
+      window.removeEventListener("touchcancel", onMouseUp);
+      window.removeEventListener("touchmove", onMouseMove);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
